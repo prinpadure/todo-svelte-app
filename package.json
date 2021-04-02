@@ -2,6 +2,8 @@
 	"name": "todo-svelte-app",
 	"version": "0.0.1",
 	"scripts": {
+		"compile": "npx tsc",
+		"compile:w": "npx tsc -w",
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
 		"start": "svelte-kit start",
@@ -31,6 +33,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^8.2.0",
+		"mongodb": "^3.6.5",
 		"mongoose": "^5.12.2"
 	}
 }

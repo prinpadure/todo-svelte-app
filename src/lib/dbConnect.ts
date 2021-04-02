@@ -1,18 +1,46 @@
-import mongoose from "mongoose";
+import { config } from "dotenv";
+import { MongoClient } from "mongodb";
 
-async function dbConnect() {
-	// check if we have a connection to the database or if it's currently
-	// connecting or disconnecting (readyState 1, 2 and 3)
-	if (mongoose.connection.readyState >= 1) {
-		return;
-	}
-
-	return mongoose.connect(process.env.MONGODB_URI, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useFindAndModify: false,
-		useCreateIndex: true
-	});
+config();
+const { MONGODB_URI, MONGODB_DB } = process.env;
+if (!MONGODB_URI) {
+	throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
 }
 
-export default dbConnect;
+if (!MONGODB_DB) {
+	throw new Error("Please define the MONGODB_DB environment variable inside .env.local");
+}
+
+/**
+ * Global is used here to maintain a cached connection across hot reloads
+ * in development. This prevents connections growing exponentially
+ * during API Route usage.
+ */
+let cached = (global as any).mongo;
+
+if (!cached) {
+	cached = (global as any).mongo = { conn: null, promise: null };
+}
+
+export async function connectToDatabase() {
+	console.log(cached.conn);
+	if (cached.conn) {
+		return cached.conn;
+	}
+
+	if (!cached.promise) {
+		const opts = {
+			useNewUrlParser: true,
+			useUnifiedTopology: true
+		};
+
+		cached.promise = MongoClient.connect(MONGODB_URI, opts).then((client) => {
+			return {
+				client,
+				db: client.db(MONGODB_DB)
+			};
+		});
+	}
+	cached.conn = await cached.promise;
+	return cached.conn;
+}
