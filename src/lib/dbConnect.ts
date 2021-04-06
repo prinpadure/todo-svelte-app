@@ -1,5 +1,10 @@
 import { config } from "dotenv";
-import { MongoClient } from "mongodb";
+import { Db, MongoClient } from "mongodb";
+
+interface DBConnection {
+	client: MongoClient;
+	db: Db;
+}
 
 config();
 const { MONGODB_URI, MONGODB_DB } = process.env;
@@ -22,8 +27,7 @@ if (!cached) {
 	cached = (global as any).mongo = { conn: null, promise: null };
 }
 
-export async function connectToDatabase() {
-	console.log(cached.conn);
+export async function connectToDatabase(): Promise<DBConnection> {
 	if (cached.conn) {
 		return cached.conn;
 	}
@@ -42,5 +46,5 @@ export async function connectToDatabase() {
 		});
 	}
 	cached.conn = await cached.promise;
-	return cached.conn;
+	return cached.conn as DBConnection;
 }

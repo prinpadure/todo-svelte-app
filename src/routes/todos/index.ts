@@ -1,4 +1,5 @@
 import { connectToDatabase } from "$lib/dbConnect";
+import { ObjectId } from "mongodb";
 
 const get = async (request): Promise<any> => {
 	try {
@@ -14,7 +15,6 @@ const get = async (request): Promise<any> => {
 			}
 		};
 	} catch (err) {
-		console.log(err);
 		return {
 			status: 500,
 			body: {
@@ -25,33 +25,56 @@ const get = async (request): Promise<any> => {
 };
 
 const post = async (request) => {
-	const completed = request.query;
-	return {
-		status: 200,
-		body: {
-			completed
-		}
-	};
+	try {
+		const dbConnection = await connectToDatabase();
+		const db = dbConnection.db;
+		const collection = db.collection("Test");
+		const todo = JSON.parse(request.body);
+		await collection.insertOne(todo);
+		return {
+			status: 200,
+			body: {
+				status: "Success"
+			}
+		};
+	} catch (e) {
+		return {
+			status: 500,
+			body: {
+				error: "Server error"
+			}
+		};
+	}
 };
 
 const put = async (request) => {
-	const completed = request.query;
-	return {
-		status: 200,
-		body: {
-			todo: "todo"
-		}
-	};
+	try {
+		const dbConnection = await connectToDatabase();
+		const db = dbConnection.db;
+		const collection = db.collection("Test");
+		const todo = JSON.parse(request.body);
+		await collection.updateOne(
+			{ _id: new ObjectId(todo._id) },
+			{ $set: { completed: todo.completed } }
+		);
+		return {
+			status: 200,
+			body: {
+				status: "Success"
+			}
+		};
+	} catch (e) {
+		return {
+			status: 500,
+			body: {
+				error: "Server error"
+			}
+		};
+	}
 };
 
 const del = async (request) => {
-	const completed = request.query;
-	return {
-		status: 200,
-		body: {
-			todo: "todo"
-		}
-	};
+	// Todo
 };
 
-export { get };
+export { get, post, put, del };
